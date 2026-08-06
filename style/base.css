@@ -12,6 +12,103 @@
   height: 100%;
 }
 
+/*
+ * Excalidraw 0.18.1 does not expose the desktop properties-panel placement.
+ * Keep these internal selectors scoped to this widget and leave its native
+ * mobile bottom bar untouched.
+ */
+/* stylelint-disable selector-class-pattern */
+.jp-Excalidraw-content .excalidraw .SVGLayer {
+  /*
+   * Lumino's strict containment makes this fixed layer pane-relative while
+   * Excalidraw renders its paths in viewport coordinates. Compensate for the
+   * pane origin as recommended in upstream issue #7113.
+   */
+  top: calc(-1 * var(--jp-excalidraw-viewport-offset-top, 0px));
+  left: calc(-1 * var(--jp-excalidraw-viewport-offset-left, 0px));
+}
+
+.jp-Excalidraw-content
+  .excalidraw:not(.excalidraw--mobile)
+  .selected-shape-actions
+  .App-menu__left {
+  inset: auto 0 0;
+  z-index: 2;
+  width: 100%;
+  max-height: min(11rem, calc(100% - 4rem)) !important;
+  border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+}
+
+.jp-Excalidraw-content
+  .excalidraw:not(.excalidraw--mobile)
+  .selected-shape-actions
+  .panelColumn {
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-evenly;
+  gap: 0.75rem;
+  width: max-content;
+  min-width: 100%;
+}
+
+.jp-Excalidraw-content
+  .excalidraw:not(.excalidraw--mobile)
+  .selected-shape-actions
+  .panelColumn
+  > * {
+  flex: 0 0 auto;
+}
+
+.jp-Excalidraw-content
+  .excalidraw:not(.excalidraw--mobile)
+  .selected-shape-actions
+  :is(.buttonList, .iconSelectList) {
+  flex-wrap: nowrap;
+}
+
+/*
+ * The full-width properties strip owns the bottom edge. Move zoom and history
+ * actions below the toolbar at the upper right, where the Library trigger was.
+ */
+.jp-Excalidraw-content
+  .excalidraw:not(.excalidraw--mobile)
+  .layer-ui__wrapper__footer {
+  inset: 1rem 0 auto;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.jp-Excalidraw-content
+  .excalidraw:not(.excalidraw--mobile)
+  .layer-ui__wrapper__footer-left {
+  margin-inline-start: auto;
+}
+
+.jp-Excalidraw-content
+  .excalidraw:not(.excalidraw--mobile)
+  .layer-ui__wrapper__footer-left
+  section {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.jp-Excalidraw-content.jp-mod-hideZoomControls
+  .excalidraw:not(.excalidraw--mobile)
+  .layer-ui__wrapper__footer-left
+  .zoom-actions {
+  display: none;
+}
+
+/* Help remains in the desktop footer even when omitted from MainMenu. */
+.jp-Excalidraw-content .excalidraw .layer-ui__wrapper__footer-right {
+  display: none;
+}
+/* stylelint-enable selector-class-pattern */
+
 .jp-Excalidraw-status {
   box-sizing: border-box;
   padding: var(--jp-notebook-padding);

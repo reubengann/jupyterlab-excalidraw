@@ -1,4 +1,9 @@
-import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
+import {
+  DefaultSidebar,
+  Excalidraw,
+  MainMenu,
+  WelcomeScreen
+} from '@excalidraw/excalidraw';
 import type {
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
@@ -16,6 +21,7 @@ import {
 } from './excalidrawFile';
 
 export const SAVE_DEBOUNCE_MS = 500;
+const ZOOM_CONTROLS_BREAKPOINT_PX = 950;
 
 /**
  * An Excalidraw canvas synchronized with a JupyterLab document model.
@@ -30,6 +36,25 @@ export class ExcalidrawWidget extends ReactWidget {
     this.excalidrawTheme = getExcalidrawTheme(this.themeManager);
     this.context.model.contentChanged.connect(this.onModelChanged, this);
     this.themeManager.themeChanged.connect(this.onThemeChanged, this);
+    this.resizeObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(() => {
+            const { left, top, width } = this.node.getBoundingClientRect();
+            this.node.classList.toggle(
+              'jp-mod-hideZoomControls',
+              width <= ZOOM_CONTROLS_BREAKPOINT_PX
+            );
+            this.node.style.setProperty(
+              '--jp-excalidraw-viewport-offset-left',
+              `${left}px`
+            );
+            this.node.style.setProperty(
+              '--jp-excalidraw-viewport-offset-top',
+              `${top}px`
+            );
+          });
+    this.resizeObserver?.observe(this.node);
     void this.initialize();
   }
 
@@ -52,21 +77,20 @@ export class ExcalidrawWidget extends ReactWidget {
         onChange={this.onSceneChange}
         theme={this.excalidrawTheme}
       >
+        <DefaultSidebar.Trigger style={{ display: 'none' }} aria-hidden />
         <MainMenu>
           <MainMenu.DefaultItems.LoadScene />
           <MainMenu.Item onClick={this.onSaveClicked}>Save</MainMenu.Item>
           <MainMenu.DefaultItems.Export />
           <MainMenu.DefaultItems.SaveAsImage />
           <MainMenu.DefaultItems.SearchMenu />
-          <MainMenu.DefaultItems.Help />
           <MainMenu.DefaultItems.ClearCanvas />
-          <MainMenu.Separator />
-          <MainMenu.Group title="Excalidraw links">
-            <MainMenu.DefaultItems.Socials />
-          </MainMenu.Group>
           <MainMenu.Separator />
           <MainMenu.DefaultItems.ChangeCanvasBackground />
         </MainMenu>
+        <WelcomeScreen>
+          <span hidden />
+        </WelcomeScreen>
       </Excalidraw>
     );
   }
@@ -77,6 +101,7 @@ export class ExcalidrawWidget extends ReactWidget {
     }
     this.context.model.contentChanged.disconnect(this.onModelChanged, this);
     this.themeManager.themeChanged.disconnect(this.onThemeChanged, this);
+    this.resizeObserver?.disconnect();
     this.cancelPendingSave();
     this.latestScene = null;
     this.loadGeneration += 1;
@@ -295,6 +320,7 @@ export class ExcalidrawWidget extends ReactWidget {
   private sceneNeedsSync = false;
   private saveTimer: number | null = null;
   private pendingContextSave: Promise<void> = Promise.resolve();
+  private readonly resizeObserver: ResizeObserver | null;
   private loadGeneration = 0;
   private renderGeneration = 0;
   private excalidrawTheme: 'light' | 'dark' = 'light';
