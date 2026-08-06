@@ -28,6 +28,10 @@
   left: calc(-1 * var(--jp-excalidraw-viewport-offset-left, 0px));
 }
 
+.jp-Excalidraw-content .excalidraw .HintViewer {
+  display: none;
+}
+
 .jp-Excalidraw-content
   .excalidraw:not(.excalidraw--mobile)
   .selected-shape-actions
