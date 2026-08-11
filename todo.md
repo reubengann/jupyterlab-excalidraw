@@ -1,0 +1,2 @@
+- Add main menu command to render drawing to svg and put it into a markdown cell
+- Add right-click menu to images in notebooks to copy them to the drawing
