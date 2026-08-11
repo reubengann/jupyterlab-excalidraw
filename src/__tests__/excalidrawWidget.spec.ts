@@ -1,5 +1,6 @@
 import {
   DefaultSidebar,
+  exportToSvg,
   MainMenu,
   WelcomeScreen
 } from '@excalidraw/excalidraw';
@@ -37,6 +38,8 @@ jest.mock('@excalidraw/excalidraw', () => {
   return {
     DefaultSidebar,
     Excalidraw: () => null,
+    exportToSvg: jest.fn(),
+    getNonDeletedElements: jest.fn(elements => elements),
     MainMenu,
     WelcomeScreen
   };
@@ -57,7 +60,8 @@ jest.mock('@jupyterlab/apputils', () => ({
     dispose(): void {
       this.isDisposed = true;
     }
-  }
+  },
+  showErrorMessage: jest.fn()
 }));
 
 jest.mock('../excalidrawFile', () => ({
@@ -67,6 +71,8 @@ jest.mock('../excalidrawFile', () => ({
 
 const mockedLoad = jest.mocked(loadExcalidrawFile);
 const mockedSave = jest.mocked(saveExcalidrawFile);
+const mockedExportToSvg = jest.mocked(exportToSvg);
+const insertSvgIntoNotebook = jest.fn<Promise<void>, [string]>();
 
 type WidgetHarness = {
   onEditorMount(editor: ExcalidrawImperativeAPI): void;
@@ -90,6 +96,9 @@ describe('ExcalidrawWidget document synchronization', () => {
     mockedLoad.mockReset();
     mockedLoad.mockResolvedValue(null);
     mockedSave.mockReset();
+    mockedExportToSvg.mockReset();
+    insertSvgIntoNotebook.mockReset();
+    insertSvgIntoNotebook.mockResolvedValue();
   });
 
   afterEach(() => {
@@ -99,7 +108,11 @@ describe('ExcalidrawWidget document synchronization', () => {
   it('initializes an empty model with native Excalidraw JSON', async () => {
     const { context, model } = createContext('');
     mockedSave.mockReturnValue('{"type":"excalidraw"}');
-    const widget = new ExcalidrawWidget(context, createThemeManager());
+    const widget = new ExcalidrawWidget(
+      context,
+      createThemeManager(),
+      insertSvgIntoNotebook
+    );
 
     await flushPromises();
     (widget as unknown as WidgetHarness).onEditorMount(createEditor());
@@ -113,7 +126,11 @@ describe('ExcalidrawWidget document synchronization', () => {
   it('debounces scene changes and ignores its own model update', async () => {
     const { context, model } = createContext('{"initial":true}');
     mockedSave.mockReturnValue('{"saved":true}');
-    const widget = new ExcalidrawWidget(context, createThemeManager());
+    const widget = new ExcalidrawWidget(
+      context,
+      createThemeManager(),
+      insertSvgIntoNotebook
+    );
     const harness = widget as unknown as WidgetHarness;
 
     await flushPromises();
@@ -136,7 +153,11 @@ describe('ExcalidrawWidget document synchronization', () => {
   it('does not save pending changes when disposed', async () => {
     const { context, model } = createContext('{"initial":true}');
     mockedSave.mockReturnValue('{"pending":true}');
-    const widget = new ExcalidrawWidget(context, createThemeManager());
+    const widget = new ExcalidrawWidget(
+      context,
+      createThemeManager(),
+      insertSvgIntoNotebook
+    );
     const harness = widget as unknown as WidgetHarness;
 
     await flushPromises();
@@ -153,7 +174,11 @@ describe('ExcalidrawWidget document synchronization', () => {
   it('flushes the current scene from the save menu item', async () => {
     const { context } = createContext('{"initial":true}');
     mockedSave.mockReturnValue('{"manual":true}');
-    const widget = new ExcalidrawWidget(context, createThemeManager());
+    const widget = new ExcalidrawWidget(
+      context,
+      createThemeManager(),
+      insertSvgIntoNotebook
+    );
     const harness = widget as unknown as WidgetHarness;
 
     await flushPromises();
@@ -174,9 +199,56 @@ describe('ExcalidrawWidget document synchronization', () => {
     widget.dispose();
   });
 
+  it('exports the drawing from the insert SVG menu item', async () => {
+    const { context } = createContext('{"initial":true}');
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    mockedExportToSvg.mockResolvedValue(svg);
+    const widget = new ExcalidrawWidget(
+      context,
+      createThemeManager(),
+      insertSvgIntoNotebook
+    );
+    const harness = widget as unknown as WidgetHarness;
+
+    await flushPromises();
+    const scene = createScene();
+    scene[1].theme = 'dark';
+    scene[1].viewBackgroundColor = '#000000';
+    harness.onSceneChange(...scene);
+
+    const excalidraw = widget.render() as unknown as RenderedElement;
+    const menu = getChildOfType(excalidraw, MainMenu);
+    const insertItem = getChildren(menu).find(
+      child =>
+        child.type === MainMenu.Item &&
+        child.props.children === 'Insert SVG into Notebook'
+    );
+    insertItem?.props.onClick?.();
+    await flushPromises();
+
+    expect(insertItem).toBeDefined();
+    expect(mockedExportToSvg).toHaveBeenCalledWith(
+      expect.objectContaining({
+        appState: expect.objectContaining({
+          exportBackground: true,
+          exportWithDarkMode: true,
+          viewBackgroundColor: '#000000'
+        })
+      })
+    );
+    expect(insertSvgIntoNotebook).toHaveBeenCalledWith(
+      expect.stringContaining('<svg')
+    );
+    widget.dispose();
+  });
+
   it('renders only the split-pane UI chrome', async () => {
     const { context } = createContext('{"initial":true}');
-    const widget = new ExcalidrawWidget(context, createThemeManager());
+    const widget = new ExcalidrawWidget(
+      context,
+      createThemeManager(),
+      insertSvgIntoNotebook
+    );
 
     await flushPromises();
 
@@ -193,6 +265,7 @@ describe('ExcalidrawWidget document synchronization', () => {
       MainMenu.Item,
       MainMenu.DefaultItems.Export,
       MainMenu.DefaultItems.SaveAsImage,
+      MainMenu.Item,
       MainMenu.DefaultItems.SearchMenu,
       MainMenu.DefaultItems.ClearCanvas,
       MainMenu.Separator,
@@ -215,7 +288,11 @@ describe('ExcalidrawWidget document synchronization', () => {
 
   it('loads external model changes for a clean editor remount', async () => {
     const state = createContext('{"initial":true}');
-    const widget = new ExcalidrawWidget(state.context, createThemeManager());
+    const widget = new ExcalidrawWidget(
+      state.context,
+      createThemeManager(),
+      insertSvgIntoNotebook
+    );
 
     await flushPromises();
     state.setContent('{"external":true}');
@@ -227,7 +304,11 @@ describe('ExcalidrawWidget document synchronization', () => {
 
   it('uses the active JupyterLab theme', async () => {
     const { context } = createContext('{"initial":true}');
-    const widget = new ExcalidrawWidget(context, createThemeManager(false));
+    const widget = new ExcalidrawWidget(
+      context,
+      createThemeManager(false),
+      insertSvgIntoNotebook
+    );
 
     await flushPromises();
 

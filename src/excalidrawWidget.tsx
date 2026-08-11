@@ -1,6 +1,8 @@
 import {
   DefaultSidebar,
   Excalidraw,
+  exportToSvg,
+  getNonDeletedElements,
   MainMenu,
   WelcomeScreen
 } from '@excalidraw/excalidraw';
@@ -9,7 +11,7 @@ import type {
   ExcalidrawInitialDataState,
   ExcalidrawProps
 } from '@excalidraw/excalidraw/types';
-import { ReactWidget } from '@jupyterlab/apputils';
+import { ReactWidget, showErrorMessage } from '@jupyterlab/apputils';
 import type { IThemeManager } from '@jupyterlab/apputils';
 import type { DocumentRegistry } from '@jupyterlab/docregistry';
 import React from 'react';
@@ -29,7 +31,8 @@ const ZOOM_CONTROLS_BREAKPOINT_PX = 950;
 export class ExcalidrawWidget extends ReactWidget {
   constructor(
     private readonly context: DocumentRegistry.IContext<DocumentRegistry.ICodeModel>,
-    private readonly themeManager: IThemeManager
+    private readonly themeManager: IThemeManager,
+    private readonly insertSvgIntoNotebook: (svg: string) => Promise<void>
   ) {
     super();
     this.addClass('jp-Excalidraw-content');
@@ -83,6 +86,9 @@ export class ExcalidrawWidget extends ReactWidget {
           <MainMenu.Item onClick={this.onSaveClicked}>Save</MainMenu.Item>
           <MainMenu.DefaultItems.Export />
           <MainMenu.DefaultItems.SaveAsImage />
+          <MainMenu.Item onClick={this.onInsertSvgClicked}>
+            Insert SVG into Notebook
+          </MainMenu.Item>
           <MainMenu.DefaultItems.SearchMenu />
           <MainMenu.DefaultItems.ClearCanvas />
           <MainMenu.Separator />
@@ -133,6 +139,27 @@ export class ExcalidrawWidget extends ReactWidget {
         { path: this.context.path }
       );
     }
+  }
+
+  /**
+   * Render the current drawing as standalone SVG markup.
+   */
+  async exportSvg(): Promise<string> {
+    if (!this.latestScene) {
+      throw new Error('The Excalidraw drawing is not ready to export.');
+    }
+
+    const [elements, appState, files] = this.latestScene;
+    const svg = await exportToSvg({
+      elements: getNonDeletedElements(elements),
+      appState: {
+        ...appState,
+        exportBackground: true,
+        exportWithDarkMode: appState.theme === 'dark'
+      },
+      files
+    });
+    return new XMLSerializer().serializeToString(svg);
   }
 
   private async initialize(): Promise<void> {
@@ -195,6 +222,14 @@ export class ExcalidrawWidget extends ReactWidget {
           error
         });
       });
+  };
+
+  private onInsertSvgClicked = (): void => {
+    void this.exportSvg()
+      .then(svg => this.insertSvgIntoNotebook(svg))
+      .catch(error =>
+        showErrorMessage('Unable to insert Excalidraw SVG', asError(error))
+      );
   };
 
   private onThemeChanged(): void {

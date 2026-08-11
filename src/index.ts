@@ -10,12 +10,14 @@ import {
 } from '@jupyterlab/apputils';
 import { IDocumentManager } from '@jupyterlab/docmanager';
 import { ILauncher } from '@jupyterlab/launcher';
+import { INotebookTracker } from '@jupyterlab/notebook';
 import { LabIcon } from '@jupyterlab/ui-components';
 
 import {
   ExcalidrawDocumentWidget,
   ExcalidrawWidgetFactory
 } from './excalidrawDocument';
+import { insertSvgIntoNotebook } from './notebook';
 
 export const PLUGIN_ID = 'jupyterlab-excalidraw:plugin';
 export const CREATE_COMMAND = 'jupyterlab-excalidraw:create-new';
@@ -35,6 +37,7 @@ export type ActivateOptions = {
   themeManager: IThemeManager;
   launcher: ILauncher | null;
   palette: ICommandPalette | null;
+  notebookTracker: INotebookTracker | null;
 };
 
 export function activate({
@@ -43,7 +46,8 @@ export function activate({
   docManager,
   themeManager,
   launcher,
-  palette
+  palette,
+  notebookTracker
 }: ActivateOptions): void {
   app.docRegistry.addFileType({
     name: FILE_TYPE,
@@ -64,7 +68,9 @@ export function activate({
       defaultFor: [FILE_TYPE]
     },
     excalidrawIcon,
-    themeManager
+    themeManager,
+    svg =>
+      insertSvgIntoNotebook(notebookTracker, app.serviceManager.contents, svg)
   );
   app.docRegistry.addWidgetFactory(factory);
 
@@ -122,14 +128,15 @@ const plugin: JupyterFrontEndPlugin<void> = {
   description: 'Create and edit Excalidraw documents in JupyterLab.',
   autoStart: true,
   requires: [ILayoutRestorer, IDocumentManager, IThemeManager],
-  optional: [ILauncher, ICommandPalette],
+  optional: [ILauncher, ICommandPalette, INotebookTracker],
   activate: (
     app: JupyterFrontEnd,
     restorer: ILayoutRestorer,
     docManager: IDocumentManager,
     themeManager: IThemeManager,
     launcher: ILauncher | null,
-    palette: ICommandPalette | null
+    palette: ICommandPalette | null,
+    notebookTracker: INotebookTracker | null
   ) => {
     activate({
       app,
@@ -137,7 +144,8 @@ const plugin: JupyterFrontEndPlugin<void> = {
       docManager,
       themeManager,
       launcher,
-      palette
+      palette,
+      notebookTracker
     });
   }
 };

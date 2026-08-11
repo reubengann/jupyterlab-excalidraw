@@ -1,25 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="jest tests" tests="10" failures="0" errors="0" time="2.271">
-  <testsuite name="ExcalidrawWidget document synchronization" errors="0" failures="0" skipped="0" timestamp="2026-08-06T03:34:33" time="1.476" tests="6">
-    <testcase classname="ExcalidrawWidget document synchronization initializes an empty model with native Excalidraw JSON" name="ExcalidrawWidget document synchronization initializes an empty model with native Excalidraw JSON" time="0.006">
+<testsuites name="jest tests" tests="14" failures="0" errors="0" time="3.482">
+  <testsuite name="ExcalidrawWidget document synchronization" errors="0" failures="0" skipped="0" timestamp="2026-08-11T13:29:49" time="2.571" tests="8">
+    <testcase classname="ExcalidrawWidget document synchronization initializes an empty model with native Excalidraw JSON" name="ExcalidrawWidget document synchronization initializes an empty model with native Excalidraw JSON" time="0.007">
     </testcase>
     <testcase classname="ExcalidrawWidget document synchronization debounces scene changes and ignores its own model update" name="ExcalidrawWidget document synchronization debounces scene changes and ignores its own model update" time="0.002">
     </testcase>
-    <testcase classname="ExcalidrawWidget document synchronization does not save pending changes when disposed" name="ExcalidrawWidget document synchronization does not save pending changes when disposed" time="0">
+    <testcase classname="ExcalidrawWidget document synchronization does not save pending changes when disposed" name="ExcalidrawWidget document synchronization does not save pending changes when disposed" time="0.001">
     </testcase>
-    <testcase classname="ExcalidrawWidget document synchronization flushes the current scene from the save menu item" name="ExcalidrawWidget document synchronization flushes the current scene from the save menu item" time="0.002">
+    <testcase classname="ExcalidrawWidget document synchronization flushes the current scene from the save menu item" name="ExcalidrawWidget document synchronization flushes the current scene from the save menu item" time="0.004">
+    </testcase>
+    <testcase classname="ExcalidrawWidget document synchronization exports the drawing from the insert SVG menu item" name="ExcalidrawWidget document synchronization exports the drawing from the insert SVG menu item" time="0.002">
+    </testcase>
+    <testcase classname="ExcalidrawWidget document synchronization renders only the split-pane UI chrome" name="ExcalidrawWidget document synchronization renders only the split-pane UI chrome" time="0.001">
     </testcase>
     <testcase classname="ExcalidrawWidget document synchronization loads external model changes for a clean editor remount" name="ExcalidrawWidget document synchronization loads external model changes for a clean editor remount" time="0.001">
     </testcase>
     <testcase classname="ExcalidrawWidget document synchronization uses the active JupyterLab theme" name="ExcalidrawWidget document synchronization uses the active JupyterLab theme" time="0">
     </testcase>
   </testsuite>
-  <testsuite name="Excalidraw file persistence" errors="0" failures="0" skipped="0" timestamp="2026-08-06T03:34:35" time="0.041" tests="4">
-    <testcase classname="Excalidraw file persistence represents a new empty document without parsing" name="Excalidraw file persistence represents a new empty document without parsing" time="0">
+  <testsuite name="insertSvgIntoNotebook" errors="0" failures="0" skipped="0" timestamp="2026-08-11T13:29:52" time="0.056" tests="2">
+    <testcase classname="insertSvgIntoNotebook saves and links an SVG beside the notebook" name="insertSvgIntoNotebook saves and links an SVG beside the notebook" time="0.001">
     </testcase>
-    <testcase classname="Excalidraw file persistence loads native Excalidraw JSON through the official loader" name="Excalidraw file persistence loads native Excalidraw JSON through the official loader" time="0">
+    <testcase classname="insertSvgIntoNotebook requires a recently selected notebook cell" name="insertSvgIntoNotebook requires a recently selected notebook cell" time="0.006">
     </testcase>
-    <testcase classname="Excalidraw file persistence serializes the complete local scene including files" name="Excalidraw file persistence serializes the complete local scene including files" time="0.001">
+  </testsuite>
+  <testsuite name="Excalidraw file persistence" errors="0" failures="0" skipped="0" timestamp="2026-08-11T13:29:52" time="0.047" tests="4">
+    <testcase classname="Excalidraw file persistence represents a new empty document without parsing" name="Excalidraw file persistence represents a new empty document without parsing" time="0.001">
+    </testcase>
+    <testcase classname="Excalidraw file persistence loads native Excalidraw JSON through the official loader" name="Excalidraw file persistence loads native Excalidraw JSON through the official loader" time="0.001">
+    </testcase>
+    <testcase classname="Excalidraw file persistence serializes the complete local scene including files" name="Excalidraw file persistence serializes the complete local scene including files" time="0">
     </testcase>
     <testcase classname="Excalidraw file persistence reports invalid files clearly" name="Excalidraw file persistence reports invalid files clearly" time="0.002">
     </testcase>

@@ -20,7 +20,8 @@ export class ExcalidrawWidgetFactory extends ABCWidgetFactory<
   constructor(
     options: DocumentRegistry.IWidgetFactoryOptions<ExcalidrawDocumentWidget>,
     private readonly icon: LabIcon,
-    private readonly themeManager: IThemeManager
+    private readonly themeManager: IThemeManager,
+    private readonly insertSvgIntoNotebook: (svg: string) => Promise<void>
   ) {
     super(options);
   }
@@ -29,7 +30,11 @@ export class ExcalidrawWidgetFactory extends ABCWidgetFactory<
     context: DocumentRegistry.IContext<DocumentRegistry.ICodeModel>
   ): ExcalidrawDocumentWidget {
     const widget = new ExcalidrawDocumentWidget({
-      content: new ExcalidrawWidget(context, this.themeManager),
+      content: new ExcalidrawWidget(
+        context,
+        this.themeManager,
+        this.insertSvgIntoNotebook
+      ),
       context
     });
     widget.title.icon = this.icon;
