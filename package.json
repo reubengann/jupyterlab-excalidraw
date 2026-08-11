@@ -69,7 +69,7 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.0.0",
-        "@jupyter/builder": "^1.2.0",
+        "@jupyter/builder": "^1.2.2",
         "@jupyter/eslint-plugin": "^0.0.5",
         "@jupyterlab/testutils": "^4.0.0",
         "@types/jest": "^29.2.0",
@@ -94,7 +94,6 @@
         "yjs": "^13.5.0"
     },
     "resolutions": {
-        "@jupyter/builder@npm:1.2.1/glob": "npm:7.2.3",
         "lib0": "0.2.111",
         "webpack": "5.106.0"
     },
